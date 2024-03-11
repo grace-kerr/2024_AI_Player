@@ -1,1 +1,1 @@
-# 2024_AI_Player
+# 2048_AI_Player
