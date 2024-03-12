@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -17,7 +18,16 @@ public class Game2048 {
   }
 
   private void addNewTile() {
-    int value = (random.nextInt(2) + 1) * 2; // Generate 2 or 4 randomly
+    int value;
+    double randomValue = Math.random(); // Generate a random value between 0 and 1
+
+    // 90% chance of generating 2, 10% chance of generating 4
+    if (randomValue < 0.9) {
+      value = 2;
+    } else {
+      value = 4;
+    }
+
     int row, col;
 
     do {
@@ -39,13 +49,23 @@ public class Game2048 {
     System.out.println();
   }
 
-  private void moveTilesLeft() {
-    for (int[] row : board) {
+  private boolean moveTilesLeft() {
+    int[][] oldBoard = copyBoard(board);
+    for (int i = 0; i < 4; i++) {
+      int[] row = new int[4];
+      for (int j = 0; j < 4; j++) {
+        row[j] = board[i][j];
+      }
       row = mergeTiles(row);
+      for (int j = 0; j < 4; j++) {
+        board[i][j] = row[j];
+      }
     }
+    return !Arrays.deepEquals(board, oldBoard);
   }
 
-  private void moveTilesRight() {
+  private boolean moveTilesRight() {
+    int[][] oldBoard = copyBoard(board);
     for (int i = 0; i < 4; i++) {
       int[] row = new int[4];
       for (int j = 0; j < 4; j++) {
@@ -56,9 +76,11 @@ public class Game2048 {
         board[i][3 - j] = row[j];
       }
     }
+    return !Arrays.deepEquals(board, oldBoard);
   }
 
-  private void moveTilesUp() {
+  private boolean moveTilesUp() {
+    int[][] oldBoard = copyBoard(board);
     for (int j = 0; j < 4; j++) {
       int[] col = new int[4];
       for (int i = 0; i < 4; i++) {
@@ -69,9 +91,11 @@ public class Game2048 {
         board[i][j] = col[i];
       }
     }
+    return !Arrays.deepEquals(board, oldBoard);
   }
 
-  private void moveTilesDown() {
+  private boolean moveTilesDown() {
+    int[][] oldBoard = copyBoard(board);
     for (int j = 0; j < 4; j++) {
       int[] col = new int[4];
       for (int i = 0; i < 4; i++) {
@@ -82,6 +106,7 @@ public class Game2048 {
         board[3 - i][j] = col[i];
       }
     }
+    return !Arrays.deepEquals(board, oldBoard);
   }
 
   private int[] mergeTiles(int[] line) {
@@ -119,37 +144,41 @@ public class Game2048 {
     return true;
   }
 
+  private int[][] copyBoard(int[][] board) {
+    int[][] copy = new int[4][4];
+    for (int i = 0; i < 4; i++) {
+      System.arraycopy(board[i], 0, copy[i], 0, 4);
+    }
+    return copy;
+  }
+
   public void play() {
     Scanner scanner = new Scanner(System.in);
     while (!gameOver) {
       printBoard();
 
-      System.out.print("Enter move (W/A/S/D): ");
-      String move = AIPlayer.turn();
-      move = move.toUpperCase();
-      System.out.println(move);
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
+      boolean moved = false;
+      while (!moved) {
+        String move = AIPlayer.turn(); // Get move from AIPlayer
+        switch (move) {
+          case "W":
+            moved = moveTilesUp();
+            break;
+          case "A":
+            moved = moveTilesLeft();
+            break;
+          case "S":
+            moved = moveTilesDown();
+            break;
+          case "D":
+            moved = moveTilesRight();
+            break;
+        }
 
-      }
-
-      switch (move) {
-        case "W":
-          moveTilesUp();
-          break;
-        case "A":
-          moveTilesLeft();
-          break;
-        case "S":
-          moveTilesDown();
-          break;
-        case "D":
-          moveTilesRight();
-          break;
-        default:
-          System.out.println("Invalid move. Please enter W/A/S/D.");
-          continue;
+        // If none of the moves resulted in changes, prompt for a new move
+        if (!moved) {
+          System.out.println("Move didn't result in any changes. Trying a different move...");
+        }
       }
 
       addNewTile();
