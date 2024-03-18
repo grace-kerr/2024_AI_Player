@@ -28,15 +28,6 @@ public class Game2048 {
   }
 
   public void play() {
-    // for (int i = 0; i < 3; i++) {
-    //   addNewTile();
-    //   printBoard();
-    //   String move = getBestMove();
-    //   executeMove(move);
-    //   System.out.println();
-    //   System.out.println();
-    //   gameOver = isGameOver();
-    // }
     while (!gameOver) {
       printBoard();
       String move = getBestMove();
@@ -251,7 +242,7 @@ public class Game2048 {
     boolean canMoveLeftRight = canMoveLeft() || canMoveRight();
 
     // If both up/down and left/right movements are possible or only one direction is possible,
-    // consider the corresponding moves. If none are possible, return an empty string.
+    // consider the corresponding moves.
     if ((canMoveUpDown && canMoveLeftRight) || (!canMoveUpDown && !canMoveLeftRight)) {
       for (String move : possibleMoves) {
         // get the nexw game board, if the move is executed
@@ -294,10 +285,6 @@ public class Game2048 {
         for (int j = 0; j < 4; j++) {
           if (game.getBoard()[i][j] == 0) {
             Game2048 copyGame2 = game.copy();
-            // systemout message
-            // System.out.println("Chance Node: " + i + " " + j);
-            // copyGame2.printBoard();
-
             copyGame2.getBoard()[i][j] = 2;
             double value = 0.9 * expectiMax(copyGame2, depth - 1, false);
             value += 0.1 * expectiMax(copyGame2, depth - 1, true);
@@ -316,10 +303,6 @@ public class Game2048 {
         if (moveScore > bestScore) {
           bestScore = moveScore;
         }
-
-        // systemout message
-        // System.out.println("ExpectiMax Move: " + move);
-        // copyGame.printBoard();
       }
       return bestScore;
     }
@@ -387,7 +370,8 @@ public class Game2048 {
   }
 
   private double monotonicity(Game2048 game) {
-    double[] weights = {1.0, 0.8, 0.6, 0.4}; // Weights for monotonicity in each direction
+    // Weights for monotonicity in each direction
+    double[] weights = {1.0, 0.8, 0.6, 0.4};
     double monoValue = 0;
 
     // Check monotonicity in rows
@@ -475,16 +459,6 @@ public class Game2048 {
 
     return smoothValue;
   }
-
-  // private int emptyCellsInRow(int[][] board, int row) {
-  //   int count = 0;
-  //   for (int cell : board[row]) {
-  //     if (cell == 0) {
-  //       count++;
-  //     }
-  //   }
-  //   return count;
-  // }
 
   public int[][] getBoard() {
     return board;
