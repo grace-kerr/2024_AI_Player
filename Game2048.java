@@ -311,7 +311,9 @@ public class Game2048 {
       tempGame.setBoard(tempBoard);
       game.addChild(tempGame);
       System.out.println("Left move");
-      System.out.println(Arrays.deepToString(tempBoard));
+      for (int i = 0; i < tempBoard.length; i++) {
+        System.out.println(Arrays.toString(tempBoard[i]));
+      }
 
       tempGame = game.getData();
       tempBoard = tempGame.getBoard();
@@ -320,7 +322,9 @@ public class Game2048 {
       tempGame.setBoard(tempBoard);
       game.addChild(tempGame);
       System.out.println("Right move");
-      System.out.println(Arrays.deepToString(tempBoard));
+      for (int i = 0; i < tempBoard.length; i++) {
+        System.out.println(Arrays.toString(tempBoard[i]));
+      }
 
       tempGame = game.getData();
       tempBoard = tempGame.getBoard();
@@ -329,7 +333,9 @@ public class Game2048 {
       tempGame.setBoard(tempBoard);
       game.addChild(tempGame);
       System.out.println("Down move");
-      System.out.println(Arrays.deepToString(tempBoard));
+      for (int i = 0; i < tempBoard.length; i++) {
+        System.out.println(Arrays.toString(tempBoard[i]));
+      }
 
       tempGame = game.getData();
       tempBoard = tempGame.getBoard();
@@ -338,7 +344,9 @@ public class Game2048 {
       tempGame.setBoard(tempBoard);
       game.addChild(tempGame);
       System.out.println("Up move");
-      System.out.println(Arrays.deepToString(tempBoard));
+      for (int i = 0; i < tempBoard.length; i++) {
+        System.out.println(Arrays.toString(tempBoard[i]));
+      }
     }
 
     if (game.isRoot()) {
