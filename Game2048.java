@@ -1,16 +1,7 @@
 import java.util.Arrays;
 import java.util.Random;
-import java.util.Scanner;
 
 public class Game2048 {
-  public int[][] getBoard() {
-    return board;
-  }
-
-  public void setBoard(int[][] board) {
-    this.board = board;
-  }
-
   private int[][] board;
   private int score;
   private boolean gameOver;
@@ -26,16 +17,7 @@ public class Game2048 {
   }
 
   private void addNewTile() {
-    int value;
-    double randomValue = Math.random(); // Generate a random value between 0 and 1
-
-    // 90% chance of generating 2, 10% chance of generating 4
-    if (randomValue < 0.9) {
-      value = 2;
-    } else {
-      value = 4;
-    }
-
+    int value = (random.nextDouble() < 0.9) ? 2 : 4;
     int row, col;
 
     do {
@@ -44,6 +26,18 @@ public class Game2048 {
     } while (board[row][col] != 0);
 
     board[row][col] = value;
+  }
+
+  public void play() {
+    while (!gameOver) {
+      printBoard();
+      String move = getBestMove();
+      executeMove(move);
+      addNewTile();
+      gameOver = isGameOver();
+    }
+    printBoard();
+    System.out.println("Game Over! Your score: " + score);
   }
 
   private void printBoard() {
@@ -57,123 +51,110 @@ public class Game2048 {
     System.out.println();
   }
 
-  /** Might use it */
-  private int[][] moveBoardTilesToLeft(int[][] board) {
-    int[][] oldBoard = copyBoard(board);
-    int[][] boardAfterLeftMove = copyBoard(board);
-    for (int i = 0; i < 4; i++) {
-      int[] row = new int[4];
-      for (int j = 0; j < 4; j++) {
-        row[j] = boardAfterLeftMove[i][j];
-      }
-      row = mergeTiles(row);
-      for (int j = 0; j < 4; j++) {
-        boardAfterLeftMove[i][j] = row[j];
-      }
+  private boolean isGameOver() {
+    // Check if the board is full
+    if (isBoardFull()) {
+      // Check if valid moves are available in any direction
+      return !canMoveLeft() && !canMoveRight() && !canMoveUp() && !canMoveDown();
     }
-    if (!Arrays.deepEquals(boardAfterLeftMove, oldBoard)) {
-      return boardAfterLeftMove;
-    } else {
-      System.out.println("Left move was not possible");
-      return oldBoard;
-    }
+    return false;
   }
 
-  private int[][] moveBoardTilesToRight(int[][] board) {
-    int[][] oldBoard = copyBoard(board);
-    int[][] boardAfterRightMove = copyBoard(board);
-    for (int i = 0; i < 4; i++) {
-      int[] row = new int[4];
-      for (int j = 0; j < 4; j++) {
-        row[j] = boardAfterRightMove[i][3 - j];
-      }
-      row = mergeTiles(row);
-      for (int j = 0; j < 4; j++) {
-        boardAfterRightMove[i][3 - j] = row[j];
+  private boolean isBoardFull() {
+    for (int[] row : board) {
+      for (int cell : row) {
+        if (cell == 0) {
+          return false;
+        }
       }
     }
-    if (!Arrays.deepEquals(boardAfterRightMove, oldBoard)) {
-      return boardAfterRightMove;
-    } else {
-      System.out.println("Right move was not possible");
-      return oldBoard;
-    }
+    return true;
   }
 
-  private int[][] moveBoardTilesUp(int[][] board) {
-    int[][] oldBoard = copyBoard(board);
-    int[][] boardAfterUpMove = copyBoard(board);
+  private boolean canMoveLeft() {
+    for (int i = 0; i < 4; i++) {
+      for (int j = 1; j < 4; j++) {
+        if (board[i][j] == 0 || board[i][j] == board[i][j - 1]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private boolean canMoveRight() {
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 3; j++) {
+        if (board[i][j] == 0 || board[i][j] == board[i][j + 1]) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private boolean canMoveUp() {
     for (int j = 0; j < 4; j++) {
-      int[] col = new int[4];
-      for (int i = 0; i < 4; i++) {
-        col[i] = boardAfterUpMove[i][j];
-      }
-      col = mergeTiles(col);
-      for (int i = 0; i < 4; i++) {
-        boardAfterUpMove[i][j] = col[i];
+      for (int i = 1; i < 4; i++) {
+        if (board[i][j] == 0 || board[i][j] == board[i - 1][j]) {
+          return true;
+        }
       }
     }
-    if (!Arrays.deepEquals(boardAfterUpMove, oldBoard)) {
-      return boardAfterUpMove;
-    } else {
-      System.out.println("Up move was not possible");
-      return oldBoard;
-    }
+    return false;
   }
 
-  private int[][] moveBoardTilesDown(int[][] board) {
-    int[][] oldBoard = copyBoard(board);
-    int[][] boardAfterDownMove = copyBoard(board);
+  private boolean canMoveDown() {
     for (int j = 0; j < 4; j++) {
-      int[] col = new int[4];
-      for (int i = 0; i < 4; i++) {
-        col[i] = boardAfterDownMove[3 - i][j];
-      }
-      col = mergeTiles(col);
-      for (int i = 0; i < 4; i++) {
-        boardAfterDownMove[3 - i][j] = col[i];
+      for (int i = 0; i < 3; i++) {
+        if (board[i][j] == 0 || board[i][j] == board[i + 1][j]) {
+          return true;
+        }
       }
     }
-    if (!Arrays.deepEquals(boardAfterDownMove, oldBoard)) {
-      return boardAfterDownMove;
-    } else {
-      System.out.println("Up move was not possible");
-      return oldBoard;
+    return false;
+  }
+
+  private void executeMove(String move) {
+    switch (move) {
+      case "A":
+        moveLeft();
+        break;
+      case "D":
+        moveRight();
+        break;
+      case "W":
+        moveUp();
+        break;
+      case "S":
+        moveDown();
+        break;
+      default:
+        System.out.println("Invalid move: " + move);
+        break;
     }
   }
 
-  private boolean moveTilesLeft() {
-    int[][] oldBoard = copyBoard(board);
+  private void moveLeft() {
     for (int i = 0; i < 4; i++) {
-      int[] row = new int[4];
-      for (int j = 0; j < 4; j++) {
-        row[j] = board[i][j];
-      }
+      int[] row = board[i];
       row = mergeTiles(row);
-      for (int j = 0; j < 4; j++) {
-        board[i][j] = row[j];
-      }
+      board[i] = row;
     }
-    return !Arrays.deepEquals(board, oldBoard);
   }
 
-  private boolean moveTilesRight() {
-    int[][] oldBoard = copyBoard(board);
+  private void moveRight() {
     for (int i = 0; i < 4; i++) {
-      int[] row = new int[4];
-      for (int j = 0; j < 4; j++) {
-        row[j] = board[i][3 - j];
-      }
+      int[] row = Arrays.copyOf(board[i], 4);
       row = mergeTiles(row);
+      // Reverse the row after merging to maintain the original direction
       for (int j = 0; j < 4; j++) {
-        board[i][3 - j] = row[j];
+        board[i][j] = row[3 - j];
       }
     }
-    return !Arrays.deepEquals(board, oldBoard);
   }
 
-  private boolean moveTilesUp() {
-    int[][] oldBoard = copyBoard(board);
+  private void moveUp() {
     for (int j = 0; j < 4; j++) {
       int[] col = new int[4];
       for (int i = 0; i < 4; i++) {
@@ -184,11 +165,9 @@ public class Game2048 {
         board[i][j] = col[i];
       }
     }
-    return !Arrays.deepEquals(board, oldBoard);
   }
 
-  private boolean moveTilesDown() {
-    int[][] oldBoard = copyBoard(board);
+  private void moveDown() {
     for (int j = 0; j < 4; j++) {
       int[] col = new int[4];
       for (int i = 0; i < 4; i++) {
@@ -199,7 +178,6 @@ public class Game2048 {
         board[3 - i][j] = col[i];
       }
     }
-    return !Arrays.deepEquals(board, oldBoard);
   }
 
   private int[] mergeTiles(int[] line) {
@@ -224,142 +202,266 @@ public class Game2048 {
     return result;
   }
 
-  private boolean isGameOver() {
+  private double evaluateHeuristic(Game2048 game) {
+    // Heuristic: prioritize the number of empty cells and favor moves towards corners
+    int[] weights = {3, 2, 1, 2}; // Weights for empty cells in each row
+    double heuristicValue = 0;
+
+    // Heuristic: Monotonicity
+    heuristicValue += monotonicity(game);
+
+    // Heuristic: Smoothness
+    heuristicValue += smoothness(game);
+
+    // Heuristic: Number of empty cells
     for (int i = 0; i < 4; i++) {
-      for (int j = 0; j < 4; j++) {
-        if (board[i][j] == 0
-            || (i > 0 && board[i][j] == board[i - 1][j])
-            || (j > 0 && board[i][j] == board[i][j - 1])) {
-          return false;
+      heuristicValue += weights[i] * emptyCellsInRow(game.getBoard(), i);
+    }
+
+    // Heuristic: Prioritize corners
+    heuristicValue += cornerBias(game.getBoard());
+
+    return heuristicValue;
+  }
+
+  private double cornerBias(int[][] board) {
+    // Corners and their adjacent tiles have higher weights
+    double cornerWeight = 0.0;
+
+    // Check each corner
+    cornerWeight += board[0][0] + board[0][1] + board[1][0];
+    cornerWeight += board[0][3] + board[0][2] + board[1][3];
+    cornerWeight += board[3][0] + board[3][1] + board[2][0];
+    cornerWeight += board[3][3] + board[3][2] + board[2][3];
+
+    return cornerWeight;
+  }
+
+  private String getBestMove() {
+    String[] possibleMoves = {"A", "D", "W", "S"};
+    double bestScore = Double.NEGATIVE_INFINITY;
+    String bestMove = "";
+
+    boolean canMoveUpDown = canMoveUp() || canMoveDown();
+    boolean canMoveLeftRight = canMoveLeft() || canMoveRight();
+
+    // If both up/down and left/right movements are possible or only one direction is possible,
+    // consider the corresponding moves. If none are possible, return an empty string.
+    if ((canMoveUpDown && canMoveLeftRight) || (!canMoveUpDown && !canMoveLeftRight)) {
+      for (String move : possibleMoves) {
+        // get the nexw game board, if the move is executed
+        Game2048 copyGame = copy();
+        copyGame.executeMove(move);
+
+        // Heuristic evaluation
+        double moveScore = copyGame.getScore() - score; // Difference in score after the move
+        double heuristicScore = evaluateHeuristic(copyGame); // Heuristic evaluation for the move
+        double combinedScore =
+            moveScore + heuristicScore; // Combine score difference and heuristic score
+        double moveExpectiMax = expectiMax(copyGame, 2, false); // Call expectiMax with depth X
+        combinedScore += moveExpectiMax; // Add the expectiMax score to the combined score
+        if (combinedScore > bestScore) {
+          bestScore = combinedScore;
+          bestMove = move;
+        }
+      }
+    } else if (canMoveUpDown) {
+      // If only up/down movement is possible, consider up and down movements
+      bestMove = canMoveUp() ? "W" : "S";
+    } else if (canMoveLeftRight) {
+      // If only left/right movement is possible, consider left and right movements
+      bestMove = canMoveLeft() ? "A" : "D";
+    }
+
+    return bestMove;
+  }
+
+  private double expectiMax(Game2048 game, int depth, boolean isChanceNode) {
+    // base case for the recursion
+    if (depth == 0 || game.isGameOver()) {
+      return game.getScore() + evaluateHeuristic(game);
+    }
+
+    if (isChanceNode) {
+      double sum = 0;
+      int emptyCells = countEmptyCells(game.getBoard());
+      for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+          if (game.getBoard()[i][j] == 0) {
+            Game2048 copyGame2 = game.copy();
+            copyGame2.getBoard()[i][j] = 2;
+            double value = 0.9 * expectiMax(copyGame2, depth - 1, false);
+            value += 0.1 * expectiMax(copyGame2, depth - 1, true);
+            sum += value / emptyCells;
+          }
+        }
+      }
+      return sum;
+    } else {
+      String[] possibleMoves = {"A", "D", "W", "S"};
+      double bestScore = Double.NEGATIVE_INFINITY;
+      for (String move : possibleMoves) {
+        Game2048 copyGame = game.copy();
+        copyGame.executeMove(move);
+        double moveScore = expectiMax(copyGame, depth - 1, true);
+        if (moveScore > bestScore) {
+          bestScore = moveScore;
+        }
+      }
+      return bestScore;
+    }
+  }
+
+  private int countEmptyCells(int[][] board) {
+    int count = 0;
+    for (int[] row : board) {
+      for (int cell : row) {
+        if (cell == 0) {
+          count++;
         }
       }
     }
-    return true;
+    return count;
   }
 
-  private int[][] copyBoard(int[][] board) {
+  private Game2048 copy() {
+    Game2048 copyGame = new Game2048();
+    copyGame.setBoard(copyBoard(board));
+    copyGame.setScore(score);
+    copyGame.setGameOver(gameOver);
+    return copyGame;
+  }
+
+  private int[][] copyBoard(int[][] original) {
     int[][] copy = new int[4][4];
     for (int i = 0; i < 4; i++) {
-      System.arraycopy(board[i], 0, copy[i], 0, 4);
+      System.arraycopy(original[i], 0, copy[i], 0, 4);
     }
     return copy;
   }
 
-  public void play() {
-    Scanner scanner = new Scanner(System.in);
-    while (!gameOver) {
-      printBoard();
-      try {
-        Thread.sleep(1000);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
+  private double monotonicity(Game2048 game) {
+    double[] weights = {1.0, 0.8, 0.6, 0.4}; // Weights for monotonicity in each direction
+    double monoValue = 0;
 
-      expandNode(rootGame);
-
-      boolean moved = false;
-      while (!moved) {
-        String move = AIPlayer.turn(); // Get move from AIPlayer
-        switch (move) {
-          case "W":
-            moved = moveTilesUp();
-            break;
-          case "A":
-            moved = moveTilesLeft();
-            break;
-          case "S":
-            moved = moveTilesDown();
-            break;
-          case "D":
-            moved = moveTilesRight();
-            break;
+    // Check monotonicity in rows
+    for (int i = 0; i < 4; i++) {
+      int current = 0;
+      int next = current + 1;
+      while (next < 4) {
+        while (next < 4 && game.getBoard()[i][next] == 0) {
+          next++;
         }
+        if (next >= 4) {
+          next--;
+        }
+        int currentValue =
+            (game.getBoard()[i][current] != 0)
+                ? (int) (Math.log(game.getBoard()[i][current]) / Math.log(2))
+                : 0;
+        int nextValue =
+            (game.getBoard()[i][next] != 0)
+                ? (int) (Math.log(game.getBoard()[i][next]) / Math.log(2))
+                : 0;
 
-        // If none of the moves resulted in changes, prompt for a new move
-        if (!moved) {
-          System.out.println("Move didn't result in any changes. Trying a different move...");
+        if (currentValue > nextValue) {
+          monoValue += (nextValue - currentValue) * weights[i];
+        } else if (nextValue > currentValue) {
+          monoValue += (currentValue - nextValue) * weights[i];
+        }
+        current = next;
+        next++;
+      }
+    }
+
+    // Check monotonicity in columns
+    for (int j = 0; j < 4; j++) {
+      int current = 0;
+      int next = current + 1;
+      while (next < 4) {
+        while (next < 4 && game.getBoard()[next][j] == 0) {
+          next++;
+        }
+        if (next >= 4) {
+          next--;
+        }
+        int currentValue =
+            (game.getBoard()[j][current] != 0)
+                ? (int) (Math.log(game.getBoard()[j][current]) / Math.log(2))
+                : 0;
+        int nextValue =
+            (game.getBoard()[j][next] != 0)
+                ? (int) (Math.log(game.getBoard()[j][next]) / Math.log(2))
+                : 0;
+        if (currentValue > nextValue) {
+          monoValue += (nextValue - currentValue) * weights[j];
+        } else if (nextValue > currentValue) {
+          monoValue += (currentValue - nextValue) * weights[j];
+        }
+        current = next;
+        next++;
+      }
+    }
+
+    return monoValue;
+  }
+
+  private double smoothness(Game2048 game) {
+    double smoothValue = 0;
+
+    for (int i = 0; i < 4; i++) {
+      for (int j = 0; j < 4; j++) {
+        if (game.getBoard()[i][j] != 0) {
+          int value = (int) (Math.log(game.getBoard()[i][j]) / Math.log(2));
+          // Check right
+          if (j < 3 && game.getBoard()[i][j + 1] != 0) {
+            int rightValue = (int) (Math.log(game.getBoard()[i][j + 1]) / Math.log(2));
+            smoothValue -= Math.abs(value - rightValue);
+          }
+          // Check down
+          if (i < 3 && game.getBoard()[i + 1][j] != 0) {
+            int downValue = (int) (Math.log(game.getBoard()[i + 1][j]) / Math.log(2));
+            smoothValue -= Math.abs(value - downValue);
+          }
         }
       }
-
-      addNewTile();
-      gameOver = isGameOver();
     }
 
-    printBoard();
-    System.out.println("Game Over! Your score: " + score);
-    scanner.close();
+    return smoothValue;
   }
 
-  public TreeNode2048<Game2048> getRootGame() {
-    return rootGame;
-  }
-
-  public void setRootGame(TreeNode2048<Game2048> rootGame) {
-    this.rootGame = rootGame;
-  }
-
-  private TreeNode2048<Game2048> rootGame;
-
-  public void expandNode(TreeNode2048<Game2048> game) {
-    if (!game.isChanceNode()) {
-      Game2048 mainGame2048 = game.getData();
-
-      Game2048 tempGame = mainGame2048;
-      int[][] tempBoard = mainGame2048.getBoard();
-
-      tempBoard = moveBoardTilesToLeft(tempBoard);
-      tempGame.setBoard(tempBoard);
-      game.addChild(tempGame);
-      System.out.println("Left move");
-      for (int i = 0; i < tempBoard.length; i++) {
-        System.out.println(Arrays.toString(tempBoard[i]));
-      }
-
-      tempGame = game.getData();
-      tempBoard = tempGame.getBoard();
-
-      tempBoard = moveBoardTilesToRight(tempBoard);
-      tempGame.setBoard(tempBoard);
-      game.addChild(tempGame);
-      System.out.println("Right move");
-      for (int i = 0; i < tempBoard.length; i++) {
-        System.out.println(Arrays.toString(tempBoard[i]));
-      }
-
-      tempGame = game.getData();
-      tempBoard = tempGame.getBoard();
-
-      tempBoard = moveBoardTilesDown(tempBoard);
-      tempGame.setBoard(tempBoard);
-      game.addChild(tempGame);
-      System.out.println("Down move");
-      for (int i = 0; i < tempBoard.length; i++) {
-        System.out.println(Arrays.toString(tempBoard[i]));
-      }
-
-      tempGame = game.getData();
-      tempBoard = tempGame.getBoard();
-
-      tempBoard = moveBoardTilesUp(tempBoard);
-      tempGame.setBoard(tempBoard);
-      game.addChild(tempGame);
-      System.out.println("Up move");
-      for (int i = 0; i < tempBoard.length; i++) {
-        System.out.println(Arrays.toString(tempBoard[i]));
+  private int emptyCellsInRow(int[][] board, int row) {
+    int count = 0;
+    for (int cell : board[row]) {
+      if (cell == 0) {
+        count++;
       }
     }
-
-    if (game.isRoot()) {
-      rootGame.addChild(game);
-    } else {
-
-    }
+    return count;
   }
 
-  public void evaluateChanceNodes(TreeNode2048<Game2048> game) {
-    if (!game.isChanceNode()) {}
+  public int[][] getBoard() {
+    return board;
   }
 
-  // TODO
-  public void evaluateUtilityNodes() {}
+  public void setBoard(int[][] board) {
+    this.board = board;
+  }
+
+  public int getScore() {
+    return score;
+  }
+
+  public void setScore(int score) {
+    this.score = score;
+  }
+
+  public void setGameOver(boolean gameOver) {
+    this.gameOver = gameOver;
+  }
+
+  public static void main(String[] args) {
+    Game2048 game = new Game2048();
+    game.play();
+  }
 }
