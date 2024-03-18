@@ -13,7 +13,6 @@ public class Game2048 {
     gameOver = false;
     random = new Random();
     addNewTile();
-    addNewTile();
   }
 
   private void addNewTile() {
@@ -29,12 +28,22 @@ public class Game2048 {
   }
 
   public void play() {
+    // for (int i = 0; i < 3; i++) {
+    //   addNewTile();
+    //   printBoard();
+    //   String move = getBestMove();
+    //   executeMove(move);
+    //   System.out.println();
+    //   System.out.println();
+    //   gameOver = isGameOver();
+    // }
     while (!gameOver) {
       printBoard();
       String move = getBestMove();
       executeMove(move);
       addNewTile();
       gameOver = isGameOver();
+      System.out.println();
     }
     printBoard();
     System.out.println("Game Over! Your score: " + score);
@@ -203,8 +212,6 @@ public class Game2048 {
   }
 
   private double evaluateHeuristic(Game2048 game) {
-    // Heuristic: prioritize the number of empty cells and favor moves towards corners
-    int[] weights = {3, 2, 1, 2}; // Weights for empty cells in each row
     double heuristicValue = 0;
 
     // Heuristic: Monotonicity
@@ -214,9 +221,7 @@ public class Game2048 {
     heuristicValue += smoothness(game);
 
     // Heuristic: Number of empty cells
-    for (int i = 0; i < 4; i++) {
-      heuristicValue += weights[i] * emptyCellsInRow(game.getBoard(), i);
-    }
+    heuristicValue += emptyCellsHeuristic(game.getBoard());
 
     // Heuristic: Prioritize corners
     heuristicValue += cornerBias(game.getBoard());
@@ -258,7 +263,7 @@ public class Game2048 {
         double heuristicScore = evaluateHeuristic(copyGame); // Heuristic evaluation for the move
         double combinedScore =
             moveScore + heuristicScore; // Combine score difference and heuristic score
-        double moveExpectiMax = expectiMax(copyGame, 2, false); // Call expectiMax with depth X
+        double moveExpectiMax = expectiMax(copyGame, 4, false);
         combinedScore += moveExpectiMax; // Add the expectiMax score to the combined score
         if (combinedScore > bestScore) {
           bestScore = combinedScore;
@@ -289,6 +294,10 @@ public class Game2048 {
         for (int j = 0; j < 4; j++) {
           if (game.getBoard()[i][j] == 0) {
             Game2048 copyGame2 = game.copy();
+            // systemout message
+            // System.out.println("Chance Node: " + i + " " + j);
+            // copyGame2.printBoard();
+
             copyGame2.getBoard()[i][j] = 2;
             double value = 0.9 * expectiMax(copyGame2, depth - 1, false);
             value += 0.1 * expectiMax(copyGame2, depth - 1, true);
@@ -307,9 +316,46 @@ public class Game2048 {
         if (moveScore > bestScore) {
           bestScore = moveScore;
         }
+
+        // systemout message
+        // System.out.println("ExpectiMax Move: " + move);
+        // copyGame.printBoard();
       }
       return bestScore;
     }
+  }
+
+  private double emptyCellsHeuristic(int[][] board) {
+    double[] scoreGrid = {
+      Math.pow(4, 15), Math.pow(4, 14), Math.pow(4, 13), Math.pow(4, 12),
+      Math.pow(4, 8), Math.pow(4, 9), Math.pow(4, 10), Math.pow(4, 11),
+      Math.pow(4, 7), Math.pow(4, 6), Math.pow(4, 5), Math.pow(4, 4),
+      Math.pow(4, 0), Math.pow(4, 1), Math.pow(4, 2), Math.pow(4, 3)
+    };
+
+    double emptyCellsScore = 0;
+    int cellIndex = 0;
+
+    // Traverse the board in snake-like order and calculate the score
+    for (int i = 0; i < 4; i++) {
+      if (i % 2 == 0) {
+        for (int j = 0; j < 4; j++) {
+          if (board[i][j] == 0) {
+            emptyCellsScore += scoreGrid[cellIndex];
+          }
+          cellIndex++;
+        }
+      } else {
+        for (int j = 3; j >= 0; j--) {
+          if (board[i][j] == 0) {
+            emptyCellsScore += scoreGrid[cellIndex];
+          }
+          cellIndex++;
+        }
+      }
+    }
+
+    return emptyCellsScore;
   }
 
   private int countEmptyCells(int[][] board) {
@@ -430,15 +476,15 @@ public class Game2048 {
     return smoothValue;
   }
 
-  private int emptyCellsInRow(int[][] board, int row) {
-    int count = 0;
-    for (int cell : board[row]) {
-      if (cell == 0) {
-        count++;
-      }
-    }
-    return count;
-  }
+  // private int emptyCellsInRow(int[][] board, int row) {
+  //   int count = 0;
+  //   for (int cell : board[row]) {
+  //     if (cell == 0) {
+  //       count++;
+  //     }
+  //   }
+  //   return count;
+  // }
 
   public int[][] getBoard() {
     return board;
